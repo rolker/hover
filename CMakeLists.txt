@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   actionlib
   project11
+  geographic_visualization_msgs
 )
 
 add_action_files(DIRECTORY action FILES hover.action)
