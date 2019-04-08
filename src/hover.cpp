@@ -7,18 +7,20 @@
 #include "geometry_msgs/TwistStamped.h"
 #include "geographic_msgs/GeoPointStamped.h"
 #include "geographic_visualization_msgs/GeoVizItem.h"
+#include "std_msgs/String.h"
 
 class Hover
 {
 public:
     Hover(std::string const &name):
-        m_action_server(m_node_handle, name, false)
+        m_action_server(m_node_handle, name, false),m_autonomous_state(false)
     {
         m_desired_heading_pub = m_node_handle.advertise<marine_msgs::NavEulerStamped>("/project11/desired_heading",1);
         m_desired_speed_pub = m_node_handle.advertise<geometry_msgs::TwistStamped>("/project11/desired_speed",1);
         m_display_pub = m_node_handle.advertise<geographic_visualization_msgs::GeoVizItem>("/project11/display",5);
         
         m_position_sub = m_node_handle.subscribe("/position", 10, &Hover::positionCallback, this);
+        m_state_sub = m_node_handle.subscribe("/helm_mode", 10, &Hover::stateCallback, this);
 
         m_action_server.registerGoalCallback(boost::bind(&Hover::goalCallback, this));
         m_action_server.registerPreemptCallback(boost::bind(&Hover::preemptCallback, this));
@@ -103,7 +105,7 @@ public:
     
     void positionCallback(const geographic_msgs::GeoPointStamped::ConstPtr& inmsg)
     {
-        if(m_action_server.isActive())
+        if(m_action_server.isActive() && m_autonomous_state)
         {
             gz4d::geo::Point<double,gz4d::geo::WGS84::LatLon> vehicle_position(inmsg->position.latitude, inmsg->position.longitude,0.0);
             std::pair<double,double> azimuth_distance_to_target = gz4d::geo::WGS84::Ellipsoid::inverse(vehicle_position, m_target);
@@ -139,6 +141,11 @@ public:
         }
     }
     
+    void stateCallback(const std_msgs::String::ConstPtr &inmsg)
+    {
+        m_autonomous_state = inmsg->data == "autonomous";
+    }
+    
 private:
     ros::NodeHandle m_node_handle;
     actionlib::SimpleActionServer<hover::hoverAction> m_action_server;
@@ -148,12 +155,14 @@ private:
     ros::Publisher m_desired_heading_pub;
     ros::Publisher m_display_pub;
     ros::Subscriber m_position_sub;
+    ros::Subscriber m_state_sub;
 
     // goal variables
     gz4d::geo::Point<double,gz4d::geo::WGS84::LatLon> m_target;
     float m_minimum_distance; // meters
     float m_maximum_distance; // meters
     float m_maximum_speed;    // m/s
+    bool m_autonomous_state;
     
 };
 
