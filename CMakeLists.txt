@@ -11,7 +11,13 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   project11
   geographic_visualization_msgs
+  dynamic_reconfigure
 )
+
+generate_dynamic_reconfigure_options(
+    cfg/hover.cfg
+)
+
 
 add_action_files(DIRECTORY action FILES hover.action)
 generate_messages(DEPENDENCIES actionlib_msgs geographic_msgs)

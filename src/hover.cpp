@@ -8,6 +8,8 @@
 #include "geographic_msgs/GeoPointStamped.h"
 #include "geographic_visualization_msgs/GeoVizItem.h"
 #include "std_msgs/String.h"
+#include "dynamic_reconfigure/server.h"
+#include "hover/hoverConfig.h"
 
 class Hover
 {
@@ -22,6 +24,11 @@ public:
         m_position_sub = m_node_handle.subscribe("/position", 10, &Hover::positionCallback, this);
         m_state_sub = m_node_handle.subscribe("/helm_mode", 10, &Hover::stateCallback, this);
 
+        dynamic_reconfigure::Server<hover::hoverConfig>::CallbackType f;
+        f = boost::bind(&Hover::reconfigureCallback, this,  _1, _2);
+        m_config_server.setCallback(f);
+
+        
         m_action_server.registerGoalCallback(boost::bind(&Hover::goalCallback, this));
         m_action_server.registerPreemptCallback(boost::bind(&Hover::preemptCallback, this));
         m_action_server.start();
@@ -40,67 +47,76 @@ public:
         m_minimum_distance = goal->minimum_distance;
         m_maximum_distance = goal->maximum_distance;
         m_maximum_speed = goal->maximum_speed;
-        
+        sendDisplay();
+        hover::hoverConfig c;
+        c.minimum_distance = m_minimum_distance;
+        c.maximum_distance = m_maximum_distance;
+        c.maximum_speed = m_maximum_speed;
+        m_config_server.updateConfig(c);
+    }
+    
+    void sendDisplay()
+    {
         geographic_visualization_msgs::GeoVizItem vizItem;
         vizItem.id = "hover";
-        
-        geographic_visualization_msgs::GeoVizPointList plist;
-        plist.points.push_back(goal->target);
-        plist.size = 10;
-        plist.color.r = .5;
-        plist.color.g = .8;
-        plist.color.b = .5;
-        plist.color.a = 1.0;
-        vizItem.point_groups.push_back(plist);
-        
-        gz4d::geo::Point<double,gz4d::geo::WGS84::LatLon> target_point(goal->target.latitude, goal->target.longitude, 0.0);
-        geographic_visualization_msgs::GeoVizPolygon polygon;
-        // exterior ring is counter-clockwise
-        for (double azimuth = 360.0; azimuth >= 0.0;  azimuth -= 10.0)
+        if(m_action_server.isActive() && m_autonomous_state)
         {
-            auto p = gz4d::geo::WGS84::Ellipsoid::direct(target_point,azimuth,m_maximum_distance);
+            geographic_visualization_msgs::GeoVizPointList plist;
             geographic_msgs::GeoPoint gp;
-            gp.latitude = p[0];
-            gp.longitude = p[1];
-            polygon.outer.points.push_back(gp);
+            gp.latitude = m_target[0];
+            gp.longitude = m_target[1];
+            plist.points.push_back(gp);
+            plist.size = 10;
+            plist.color.r = .5;
+            plist.color.g = .8;
+            plist.color.b = .5;
+            plist.color.a = 1.0;
+            vizItem.point_groups.push_back(plist);
+            
+            geographic_visualization_msgs::GeoVizPolygon polygon;
+            // exterior ring is counter-clockwise
+            for (double azimuth = 360.0; azimuth >= 0.0;  azimuth -= 10.0)
+            {
+                auto p = gz4d::geo::WGS84::Ellipsoid::direct(m_target,azimuth,m_maximum_distance);
+                geographic_msgs::GeoPoint gp;
+                gp.latitude = p[0];
+                gp.longitude = p[1];
+                polygon.outer.points.push_back(gp);
+            }
+            
+            geographic_visualization_msgs::GeoVizSimplePolygon inner;
+            // inner ring is clockwise
+            for (double azimuth = 0.0; azimuth <= 360.0;  azimuth += 10.0)
+            {
+                auto p = gz4d::geo::WGS84::Ellipsoid::direct(m_target,azimuth,m_minimum_distance);
+                geographic_msgs::GeoPoint gp;
+                gp.latitude = p[0];
+                gp.longitude = p[1];
+                inner.points.push_back(gp);
+            }
+            polygon.inner.push_back(inner);
+            
+            polygon.fill_color.r = 0.0;
+            polygon.fill_color.g = 1.0;
+            polygon.fill_color.b = 0.0;
+            polygon.fill_color.a = 0.5;
+            
+            polygon.edge_size = 2.0;
+            
+            polygon.edge_color.r = 0.0;
+            polygon.edge_color.g = 0.0;
+            polygon.edge_color.b = 1.0;
+            polygon.edge_color.a = 0.75;
+            
+            vizItem.polygons.push_back(polygon);
         }
-        
-        geographic_visualization_msgs::GeoVizSimplePolygon inner;
-        // inner ring is clockwise
-        for (double azimuth = 0.0; azimuth <= 360.0;  azimuth += 10.0)
-        {
-            auto p = gz4d::geo::WGS84::Ellipsoid::direct(target_point,azimuth,m_minimum_distance);
-            geographic_msgs::GeoPoint gp;
-            gp.latitude = p[0];
-            gp.longitude = p[1];
-            inner.points.push_back(gp);
-        }
-        polygon.inner.push_back(inner);
-        
-        polygon.fill_color.r = 0.0;
-        polygon.fill_color.g = 1.0;
-        polygon.fill_color.b = 0.0;
-        polygon.fill_color.a = 0.5;
-        
-        polygon.edge_size = 2.0;
-        
-        polygon.edge_color.r = 0.0;
-        polygon.edge_color.g = 0.0;
-        polygon.edge_color.b = 1.0;
-        polygon.edge_color.a = 0.75;
-        
-        vizItem.polygons.push_back(polygon);
         m_display_pub.publish(vizItem);
     }
     
     void preemptCallback()
     {
-        // send an empty item to display to erase visual feedback
-        geographic_visualization_msgs::GeoVizItem vizItem;
-        vizItem.id = "hover";
-        m_display_pub.publish(vizItem);
-
         m_action_server.setPreempted();
+        sendDisplay();
     }
     
     void positionCallback(const geographic_msgs::GeoPointStamped::ConstPtr& inmsg)
@@ -144,6 +160,15 @@ public:
     void stateCallback(const std_msgs::String::ConstPtr &inmsg)
     {
         m_autonomous_state = inmsg->data == "autonomous";
+        sendDisplay();
+    }
+
+    void reconfigureCallback(hover::hoverConfig &config, uint32_t level)
+    {
+        m_minimum_distance = config.minimum_distance;
+        m_maximum_distance = config.maximum_distance;
+        m_maximum_speed = config.maximum_speed;
+        sendDisplay();
     }
     
 private:
@@ -156,6 +181,8 @@ private:
     ros::Publisher m_display_pub;
     ros::Subscriber m_position_sub;
     ros::Subscriber m_state_sub;
+    
+    dynamic_reconfigure::Server<hover::hoverConfig> m_config_server;
 
     // goal variables
     gz4d::geo::Point<double,gz4d::geo::WGS84::LatLon> m_target;
