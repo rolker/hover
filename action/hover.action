@@ -1,8 +1,5 @@
 # goal
 geographic_msgs/GeoPoint target
-float32 minimum_distance   # distance from target at which speed should drop to zero
-float32 maximum_distance   # distance from target at which full speed should be used to get closer to the target. Speed tapers from full to zero between max and min distances.
-float32 maximum_speed      # m/s
 ---
 # result
 bool ok # flag indicating that hover ended for non-error reasons (i.e. user request)

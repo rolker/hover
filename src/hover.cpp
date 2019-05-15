@@ -22,7 +22,7 @@ public:
         m_display_pub = m_node_handle.advertise<geographic_visualization_msgs::GeoVizItem>("/project11/display",5);
         
         m_position_sub = m_node_handle.subscribe("/position", 10, &Hover::positionCallback, this);
-        m_state_sub = m_node_handle.subscribe("/helm_mode", 10, &Hover::stateCallback, this);
+        m_state_sub = m_node_handle.subscribe("/project11/piloting_mode", 10, &Hover::stateCallback, this);
 
         dynamic_reconfigure::Server<hover::hoverConfig>::CallbackType f;
         f = boost::bind(&Hover::reconfigureCallback, this,  _1, _2);
@@ -44,22 +44,14 @@ public:
         
         m_target[0] = goal->target.latitude;
         m_target[1] = goal->target.longitude;
-        m_minimum_distance = goal->minimum_distance;
-        m_maximum_distance = goal->maximum_distance;
-        m_maximum_speed = goal->maximum_speed;
         sendDisplay();
-        hover::hoverConfig c;
-        c.minimum_distance = m_minimum_distance;
-        c.maximum_distance = m_maximum_distance;
-        c.maximum_speed = m_maximum_speed;
-        m_config_server.updateConfig(c);
     }
     
     void sendDisplay()
     {
         geographic_visualization_msgs::GeoVizItem vizItem;
         vizItem.id = "hover";
-        if(m_action_server.isActive() && m_autonomous_state)
+        if(m_action_server.isActive())
         {
             geographic_visualization_msgs::GeoVizPointList plist;
             geographic_msgs::GeoPoint gp;
@@ -67,10 +59,20 @@ public:
             gp.longitude = m_target[1];
             plist.points.push_back(gp);
             plist.size = 10;
-            plist.color.r = .5;
-            plist.color.g = .8;
-            plist.color.b = .5;
-            plist.color.a = 1.0;
+            if (m_autonomous_state)
+            {
+                plist.color.r = .5;
+                plist.color.g = .8;
+                plist.color.b = .5;
+                plist.color.a = 1.0;
+            }
+            else
+            {
+                plist.color.r = .2;
+                plist.color.g = .3;
+                plist.color.b = .2;
+                plist.color.a = .5;
+            }    
             vizItem.point_groups.push_back(plist);
             
             geographic_visualization_msgs::GeoVizPolygon polygon;
@@ -96,17 +98,37 @@ public:
             }
             polygon.inner.push_back(inner);
             
-            polygon.fill_color.r = 0.0;
-            polygon.fill_color.g = 1.0;
-            polygon.fill_color.b = 0.0;
-            polygon.fill_color.a = 0.5;
+            if (m_autonomous_state)
+            {
+                polygon.fill_color.r = 0.0;
+                polygon.fill_color.g = 1.0;
+                polygon.fill_color.b = 0.0;
+                polygon.fill_color.a = 0.5;
+            }
+            else
+            {
+                polygon.fill_color.r = 0.0;
+                polygon.fill_color.g = 0.5;
+                polygon.fill_color.b = 0.0;
+                polygon.fill_color.a = 0.25;
+            }
             
             polygon.edge_size = 2.0;
             
-            polygon.edge_color.r = 0.0;
-            polygon.edge_color.g = 0.0;
-            polygon.edge_color.b = 1.0;
-            polygon.edge_color.a = 0.75;
+            if (m_autonomous_state)
+            {
+                polygon.edge_color.r = 0.0;
+                polygon.edge_color.g = 0.0;
+                polygon.edge_color.b = 1.0;
+                polygon.edge_color.a = 0.75;
+            }
+            else
+            {
+                polygon.edge_color.r = 0.0;
+                polygon.edge_color.g = 0.0;
+                polygon.edge_color.b = 0.5;
+                polygon.edge_color.a = 0.375;
+            }
             
             vizItem.polygons.push_back(polygon);
         }
@@ -186,6 +208,7 @@ private:
 
     // goal variables
     gz4d::geo::Point<double,gz4d::geo::WGS84::LatLon> m_target;
+    
     float m_minimum_distance; // meters
     float m_maximum_distance; // meters
     float m_maximum_speed;    // m/s
