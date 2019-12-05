@@ -22,6 +22,8 @@ public:
         m_display_pub = m_node_handle.advertise<geographic_visualization_msgs::GeoVizItem>("/project11/display",5);
         
         m_position_sub = m_node_handle.subscribe("/position", 10, &Hover::positionCallback, this);
+        m_heading_sub = m_node_handle.subscribe("/heading",10, &Hover::headingCallback, this);
+
         m_state_sub = m_node_handle.subscribe("/project11/piloting_mode", 10, &Hover::stateCallback, this);
 
         dynamic_reconfigure::Server<hover::hoverConfig>::CallbackType f;
@@ -140,7 +142,12 @@ public:
         m_action_server.setPreempted();
         sendDisplay();
     }
-    
+
+    void headingCallback(const marine_msgs::NavEulerStamped::ConstPtr& msg)
+    {
+        m_heading = msg->orientation.heading;
+    }
+
     void positionCallback(const geographic_msgs::GeoPointStamped::ConstPtr& inmsg)
     {
         if(m_action_server.isActive() && m_autonomous_state)
@@ -202,6 +209,7 @@ private:
     ros::Publisher m_desired_heading_pub;
     ros::Publisher m_display_pub;
     ros::Subscriber m_position_sub;
+    ros::Subscriber m_heading_sub;
     ros::Subscriber m_state_sub;
     
     dynamic_reconfigure::Server<hover::hoverConfig> m_config_server;
@@ -213,6 +221,7 @@ private:
     float m_maximum_distance; // meters
     float m_maximum_speed;    // m/s
     bool m_autonomous_state;
+    double m_heading;
     
 };
 
