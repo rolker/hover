@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   project11
   geographic_visualization_msgs
   dynamic_reconfigure
+  marine_msgs
 )
 
 generate_dynamic_reconfigure_options(
