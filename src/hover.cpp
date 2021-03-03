@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 
-#include "project11/gz4d_geo.h"
+#include "project11/utils.h"
 #include "hover/hoverAction.h"
 #include "actionlib/server/simple_action_server.h"
 #include "marine_msgs/NavEulerStamped.h"
@@ -10,6 +10,8 @@
 #include "std_msgs/String.h"
 #include "dynamic_reconfigure/server.h"
 #include "hover/hoverConfig.h"
+
+namespace p11 = project11;
 
 class Hover
 {
@@ -152,37 +154,40 @@ public:
     {
         if(m_action_server.isActive() && m_autonomous_state)
         {
-            gz4d::geo::Point<double,gz4d::geo::WGS84::LatLon> vehicle_position(inmsg->position.latitude, inmsg->position.longitude,0.0);
-            std::pair<double,double> azimuth_distance_to_target = gz4d::geo::WGS84::Ellipsoid::inverse(vehicle_position, m_target);
+          p11::LatLongDegrees vehicle_position;
+          p11::fromMsg(inmsg->position, vehicle_position);
+          auto azimuth_distance_to_target = p11::WGS84::inverse(vehicle_position, m_target);
             
-            float target_speed = 0.0;
-            float range = azimuth_distance_to_target.second;
-            if (range >= m_maximum_distance)
-                target_speed = m_maximum_speed;
-            else if (range > m_minimum_distance)
-            {
-                float p = (range-m_minimum_distance)/(m_maximum_distance-m_minimum_distance);
-                target_speed = p*m_maximum_speed;
-            }
+          float target_speed = 0.0;
+          float range = azimuth_distance_to_target.second;
+          if (range >= m_maximum_distance)
+              target_speed = m_maximum_speed;
+          else if (range > m_minimum_distance)
+          {
+              float p = (range-m_minimum_distance)/(m_maximum_distance-m_minimum_distance);
+              target_speed = p*m_maximum_speed;
+          }
             
-            hover::hoverFeedback feedback;
-            feedback.range = azimuth_distance_to_target.second;
-            feedback.bearing = azimuth_distance_to_target.first;
-            feedback.speed = target_speed;
+          p11::AngleDegrees bearing(azimuth_distance_to_target.first);
+          
+          hover::hoverFeedback feedback;
+          feedback.range = azimuth_distance_to_target.second;
+          feedback.bearing = bearing.value();
+          feedback.speed = target_speed;
             
-            m_action_server.publishFeedback(feedback);
+          m_action_server.publishFeedback(feedback);
             
-            ros::Time now = ros::Time::now();
+          ros::Time now = ros::Time::now();
             
-            marine_msgs::NavEulerStamped desired_heading;
-            desired_heading.header.stamp = now;
-            desired_heading.orientation.heading = azimuth_distance_to_target.first;
-            m_desired_heading_pub.publish(desired_heading);
+          marine_msgs::NavEulerStamped desired_heading;
+          desired_heading.header.stamp = now;
+          desired_heading.orientation.heading = bearing.value();
+          m_desired_heading_pub.publish(desired_heading);
             
-            geometry_msgs::TwistStamped desired_speed;
-            desired_speed.header.stamp = now;
-            desired_speed.twist.linear.x = target_speed;
-            m_desired_speed_pub.publish(desired_speed);
+          geometry_msgs::TwistStamped desired_speed;
+          desired_speed.header.stamp = now;
+          desired_speed.twist.linear.x = target_speed;
+          m_desired_speed_pub.publish(desired_speed);
         }
     }
     
@@ -215,7 +220,7 @@ private:
     dynamic_reconfigure::Server<hover::hoverConfig> m_config_server;
 
     // goal variables
-    gz4d::geo::Point<double,gz4d::geo::WGS84::LatLon> m_target;
+    p11::LatLongDegrees m_target;
     
     float m_minimum_distance; // meters
     float m_maximum_distance; // meters
