@@ -5,15 +5,14 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   geographic_msgs
-  marine_msgs
   roscpp
   genmsg
   actionlib_msgs
   actionlib
   project11
+  project11_transformations
   geographic_visualization_msgs
   dynamic_reconfigure
-  marine_msgs
 )
 
 generate_dynamic_reconfigure_options(
@@ -39,7 +38,6 @@ include_directories(
 add_executable(${PROJECT_NAME}_node src/hover.cpp)
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_node marine_msgs_gencpp)
 
 target_link_libraries(${PROJECT_NAME}_node
     ${catkin_LIBRARIES}
