@@ -10,9 +10,9 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   actionlib
   project11
-  project11_transformations
   geographic_visualization_msgs
   dynamic_reconfigure
+  tf2_ros
 )
 
 generate_dynamic_reconfigure_options(
@@ -26,7 +26,7 @@ generate_messages(DEPENDENCIES actionlib_msgs geographic_msgs)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES asv_helm
-  CATKIN_DEPENDS geographic_msgs geometry_msgs roscpp project11
+  CATKIN_DEPENDS geographic_msgs geometry_msgs roscpp project11 tf2_ros
 #  DEPENDS system_lib
 )
 
