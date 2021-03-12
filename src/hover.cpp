@@ -2,13 +2,14 @@
 
 #include "hover/hoverAction.h"
 #include "actionlib/server/simple_action_server.h"
+#include "std_msgs/Bool.h"
 #include "geometry_msgs/TwistStamped.h"
 #include "geographic_msgs/GeoPointStamped.h"
 #include "geographic_visualization_msgs/GeoVizItem.h"
 #include "dynamic_reconfigure/server.h"
 #include "hover/hoverConfig.h"
 #include "project11/utils.h"
-#include "project11_transformations/local_services.h"
+#include "project11/tf2_utils.h"
 
 namespace p11 = project11;
 
@@ -20,6 +21,9 @@ public:
     {
         m_cmd_vel_pub = m_node_handle.advertise<geometry_msgs::TwistStamped>("cmd_vel",1);
         m_display_pub = m_node_handle.advertise<geographic_visualization_msgs::GeoVizItem>("project11/display",5);
+        
+        m_enabled = true;
+        m_enable_sub = m_node_handle.subscribe<std_msgs::Bool>("enable", 10, [&](const std_msgs::BoolConstPtr& msg){this->m_enabled = msg->data; this->sendDisplay();});
         
         ros::NodeHandle nh_private("~");
     
@@ -58,10 +62,20 @@ public:
             p11::toMsg(m_target, gp);
             plist.points.push_back(gp);
             plist.size = 10;
-            plist.color.r = .5;
-            plist.color.g = .8;
-            plist.color.b = .5;
-            plist.color.a = 1.0;
+            if(m_enabled)
+            {
+              plist.color.r = .5;
+              plist.color.g = .8;
+              plist.color.b = .5;
+              plist.color.a = 1.0;
+            }
+            else
+            {
+              plist.color.r = .2;
+              plist.color.g = .3;
+              plist.color.b = .2;
+              plist.color.a = .5;
+            }  
             vizItem.point_groups.push_back(plist);
             
             geographic_visualization_msgs::GeoVizPolygon polygon;
@@ -85,17 +99,37 @@ public:
             }
             polygon.inner.push_back(inner);
             
-            polygon.fill_color.r = 0.0;
-            polygon.fill_color.g = 1.0;
-            polygon.fill_color.b = 0.0;
-            polygon.fill_color.a = 0.5;
+            if(m_enabled)
+            {
+              polygon.fill_color.r = 0.0;
+              polygon.fill_color.g = 1.0;
+              polygon.fill_color.b = 0.0;
+              polygon.fill_color.a = 0.5;
+            }
+            else
+            {
+                polygon.fill_color.r = 0.0;
+                polygon.fill_color.g = 0.5;
+                polygon.fill_color.b = 0.0;
+                polygon.fill_color.a = 0.25;
+            }
             
             polygon.edge_size = 2.0;
             
-            polygon.edge_color.r = 0.0;
-            polygon.edge_color.g = 0.0;
-            polygon.edge_color.b = 1.0;
-            polygon.edge_color.a = 0.75;
+            if(m_enabled)
+            {
+              polygon.edge_color.r = 0.0;
+              polygon.edge_color.g = 0.0;
+              polygon.edge_color.b = 1.0;
+              polygon.edge_color.a = 0.75;
+            }
+            else
+            {
+              polygon.edge_color.r = 0.0;
+              polygon.edge_color.g = 0.0;
+              polygon.edge_color.b = 0.5;
+              polygon.edge_color.a = 0.375;
+            }
             
             vizItem.polygons.push_back(polygon);
         }
@@ -111,7 +145,7 @@ public:
 
     void timerCallback(const ros::TimerEvent event)
     {
-        if(m_action_server.isActive())
+        if(m_action_server.isActive() && m_enabled)
         {
           try
           {
@@ -186,6 +220,10 @@ private:
     std::string m_base_frame;
     
     ros::Timer m_timer;
+    
+    bool m_enabled;
+    ros::Subscriber m_enable_sub;
+
 };
 
 int main(int argc, char **argv)
