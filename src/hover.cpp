@@ -134,6 +134,7 @@ public:
             vizItem.polygons.push_back(polygon);
         }
         m_display_pub.publish(vizItem);
+        m_lastDisplayTime = ros::Time::now();
     }
     
     void preemptCallback()
@@ -186,6 +187,8 @@ public:
             ROS_WARN_STREAM("Hover: " << ex.what());
           }
         }
+        if(ros::Time::now() - m_lastDisplayTime > ros::Duration(1))
+          sendDisplay();
     }
     
     void reconfigureCallback(hover::hoverConfig &config, uint32_t level)
@@ -220,7 +223,8 @@ private:
     std::string m_base_frame;
     
     ros::Timer m_timer;
-    
+    ros::Time m_lastDisplayTime;
+
     bool m_enabled;
     ros::Subscriber m_enable_sub;
 
