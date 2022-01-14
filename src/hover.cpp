@@ -32,13 +32,31 @@ void Hover::setParameters(float min_distance, float max_distance, float max_spee
   minimum_distance_ = min_distance;
   maximum_distance_ = max_distance;
   maximum_speed_ = max_speed;
-  sendDisplay();
 }
 
 void Hover::clearDisplay()
 {
   vis_display_.point_groups.clear();
   vis_display_.polygons.clear();
+}
+
+void Hover::updateDisplay(const std::string& map_frame)
+{
+  try
+  {
+    geometry_msgs::TransformStamped map_to_earth = tf_buffer_->lookupTransform("earth", map_frame, ros::Time(0));  
+    geometry_msgs::Point ecef_point_msg;
+    tf2::doTransform(target_, ecef_point_msg, map_to_earth);
+    p11::ECEF ecef_point;
+    p11::fromMsg(ecef_point_msg, ecef_point);
+    p11::LatLongDegrees ll_point = ecef_point;
+    updateDisplay(ll_point);
+  }
+  catch (tf2::TransformException &ex)
+  {
+    ROS_WARN_STREAM("Unable to find transform to generate display: " << ex.what());
+  }
+
 }
 
 void Hover::updateDisplay(p11::LatLongDegrees target)
@@ -134,7 +152,7 @@ bool Hover::generateCommands(geometry_msgs::TwistStamped &cmd_vel, const std::st
   }
   catch (tf2::TransformException &ex)
   {
-    ROS_WARN_STREAM("Hover: " << ex.what());
+    ROS_WARN_STREAM_THROTTLE(1.0,"Hover: " << ex.what());
   }
   return false;
 

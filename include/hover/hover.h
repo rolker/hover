@@ -23,6 +23,7 @@ protected:
 
   void clearDisplay();
   void updateDisplay(project11::LatLongDegrees target);
+  void updateDisplay(const std::string& map_frame);
   void sendDisplay(bool dim=false);
   void setParameters(float min_distance, float max_distance, float max_speed);
 
@@ -33,9 +34,9 @@ private:
 
   geometry_msgs::Point target_;
 
-  float minimum_distance_; // meters
-  float maximum_distance_; // meters
-  float maximum_speed_;    // m/s
+  float minimum_distance_ = 10.0; // meters
+  float maximum_distance_ = 25.0; // meters
+  float maximum_speed_ = 2.0;    // m/s
 
   const tf2_ros::Buffer *tf_buffer_ = nullptr;
 

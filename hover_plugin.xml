@@ -1,0 +1,7 @@
+<library path="lib/libhover_plugin">
+  <class name="hover/Hover" type="hover::HoverPlugin" base_class_type="project11_navigation::TaskToTwistWorkflow">
+    <description>
+      A controller that simulates a virtual anchor.
+    </description>
+  </class>
+</library>
