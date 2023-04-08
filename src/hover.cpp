@@ -136,6 +136,8 @@ bool Hover::generateCommands(geometry_msgs::TwistStamped &cmd_vel, const std::st
 
     current_range_ = sqrt(target_local.x*target_local.x+target_local.y*target_local.y);
     current_bearing_ = atan2(target_local.y, target_local.x);
+
+    //ROS_INFO_STREAM("bearing: " << current_bearing_.value());
         
     current_target_speed_ = 0.0;
     if (current_range_ >= maximum_distance_)
@@ -144,6 +146,12 @@ bool Hover::generateCommands(geometry_msgs::TwistStamped &cmd_vel, const std::st
     {
       float p = (current_range_-minimum_distance_)/(maximum_distance_-minimum_distance_);
       current_target_speed_ = p*maximum_speed_;
+    }
+    else
+    {
+      // in the zero speed zone don't turn towards target if behind us
+      if(abs(current_bearing_.value()) > M_PI/2.0)
+        current_bearing_ += M_PI;
     }
           
     cmd_vel.twist.angular.z = current_bearing_.value();
