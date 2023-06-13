@@ -16,7 +16,7 @@ void HoverPlugin::configure(std::string name, project11_navigation::Context::Ptr
   sendDisplay();
 }
 
-void HoverPlugin::setGoal(const std::shared_ptr<project11_navigation::Task>& input)
+void HoverPlugin::setGoal(const project11_navigation::Task::Ptr& input)
 {
   if(current_task_ != input)
     task_update_time_ = ros::Time();
