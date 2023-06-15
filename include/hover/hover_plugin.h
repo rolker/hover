@@ -16,6 +16,7 @@ public:
   bool getResult(geometry_msgs::TwistStamped& output) override;
 private:
   void updateTask();
+  void updateDisplayMarkers();
   project11_navigation::Context::Ptr context_;
   project11_navigation::Task::Ptr current_task_;
   ros::Time task_update_time_;

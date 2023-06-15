@@ -30,12 +30,11 @@ protected:
   double current_range_;
   project11::AngleRadiansZeroCentered current_bearing_;
   float current_target_speed_;
-private:
-
-  geometry_msgs::Point target_;
-
   float minimum_distance_ = 10.0; // meters
   float maximum_distance_ = 25.0; // meters
+  geometry_msgs::Point target_;
+
+private:
   float maximum_speed_ = 2.0;    // m/s
 
   const tf2_ros::Buffer *tf_buffer_ = nullptr;

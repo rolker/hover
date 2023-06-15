@@ -96,6 +96,7 @@ void Hover::updateDisplay(p11::LatLongDegrees target)
 
 void Hover::sendDisplay(bool dim)
 {
+  return;
   double intensity = 1.0;
   if(dim)
     intensity = 0.5;
@@ -120,7 +121,7 @@ void Hover::sendDisplay(bool dim)
     polygon.edge_color.b = 1.0*intensity;
     polygon.edge_color.a = 0.75*intensity;
   }
-    
+
   display_pub_.publish(vis_display_);
 }
 

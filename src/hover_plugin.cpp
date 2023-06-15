@@ -43,7 +43,9 @@ void HoverPlugin::updateTask()
         map_frame_ = current_task_->message().poses.front().header.frame_id;
       }
       setTarget(target);
-      updateDisplay(map_frame_);
+      //updateDisplay(map_frame_);
+    
+
       task_update_time_ = current_task_->lastUpdateTime();
     }
   }
@@ -52,6 +54,7 @@ void HoverPlugin::updateTask()
     clearDisplay();
     sendDisplay();
   }
+  updateDisplayMarkers();
 }
 
 bool HoverPlugin::running()
@@ -66,6 +69,32 @@ bool HoverPlugin::getResult(geometry_msgs::TwistStamped& output)
   if(running())
     return generateCommands(output, map_frame_);
   return false;
+}
+
+void HoverPlugin::updateDisplayMarkers()
+{
+  if(current_task_)
+  {
+    current_task_->markerArray().markers.clear();
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = map_frame_;
+    marker.header.stamp = ros::Time::now();
+    marker.id = 0;
+    marker.ns = current_task_->message().id;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.type = visualization_msgs::Marker::SPHERE;
+    marker.pose.position = target_;
+    marker.pose.orientation.w = 1.0;
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    marker.color.a = .75;
+    
+    marker.scale.x = maximum_distance_;
+    marker.scale.y = maximum_distance_;
+    marker.lifetime = ros::Duration(2.0);
+    current_task_->markerArray().markers.push_back(marker);
+  }
 }
 
 } // namespace hover
