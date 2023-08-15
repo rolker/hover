@@ -38,15 +38,19 @@ void HoverPlugin::updateTask()
       {
         auto odom = context_->getOdometry();
         target = odom.pose.pose.position;
-        map_frame_ = odom.header.frame_id;
+        if(odom.header.frame_id.empty())
+          ROS_WARN_STREAM("Empty frame_id in odom message used by hover to set  hover position");
+        else
+          map_frame_ = odom.header.frame_id;
       }
       else
       {
         target = current_task_->message().poses.front().pose.position;
-        map_frame_ = current_task_->message().poses.front().header.frame_id;
+        if(current_task_->message().poses.front().header.frame_id.empty())
+          ROS_WARN_STREAM("Empty frame_id in pose used by hover to set hover position");
+        else
+          map_frame_ = current_task_->message().poses.front().header.frame_id;
       }
-      if(map_frame_.empty())
-        ROS_WARN_STREAM("empty map_frame! From odom? " << current_task_->message().poses.empty());
       setTarget(target);
 
       task_update_time_ = current_task_->lastUpdateTime();
