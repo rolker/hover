@@ -12,9 +12,9 @@ void HoverPlugin::configure(std::string name, project11_navigation::Context::Ptr
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~/" + name);
   Hover::initialize(nh, private_nh, &context_->tfBuffer());
-  minimum_distance_ = private_nh.getParam("minimum_distance", minimum_distance_);
-  maximum_distance_ = private_nh.getParam("maximum_distance", maximum_distance_);
-  maximum_speed_ = private_nh.getParam("maximum_speed", maximum_speed_);
+  private_nh.param("minimum_distance", minimum_distance_, minimum_distance_);
+  private_nh.param("maximum_distance", maximum_distance_, maximum_distance_);
+  private_nh.param("maximum_speed", maximum_speed_, maximum_speed_);
   clearDisplay();
   sendDisplay();
 }
@@ -96,7 +96,8 @@ void HoverPlugin::updateDisplayMarkers()
     marker.scale.x = maximum_distance_;
     marker.scale.y = maximum_distance_;
     marker.lifetime = ros::Duration(2.0);
-    current_task_->markerArray().markers.push_back(marker);
+    if(!marker.header.frame_id.empty())
+      current_task_->markerArray().markers.push_back(marker);
   }
 }
 
