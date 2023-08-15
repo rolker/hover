@@ -33,9 +33,9 @@ protected:
   float minimum_distance_ = 10.0; // meters
   float maximum_distance_ = 25.0; // meters
   geometry_msgs::Point target_;
+  float maximum_speed_ = 2.0;    // m/s
 
 private:
-  float maximum_speed_ = 2.0;    // m/s
 
   const tf2_ros::Buffer *tf_buffer_ = nullptr;
 
