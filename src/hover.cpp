@@ -164,7 +164,7 @@ bool Hover::generateCommands(geometry_msgs::TwistStamped &cmd_vel, const std::st
   }
   catch (tf2::TransformException &ex)
   {
-    ROS_WARN_STREAM_THROTTLE(1.0,"Hover: " << ex.what() << " cmd_vel frame: " << cmd_vel.header.frame_id << " map_frame: " << map_frame);
+    ROS_WARN_STREAM_THROTTLE(1.0,"Hover::generateCommands: " << ex.what() << " cmd_vel frame: " << cmd_vel.header.frame_id << " map_frame: " << map_frame);
   }
   return false;
 
