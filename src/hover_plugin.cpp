@@ -39,7 +39,10 @@ void HoverPlugin::updateTask()
         auto odom = context_->getOdometry();
         target = odom.pose.pose.position;
         if(odom.header.frame_id.empty())
-          ROS_WARN_STREAM("Empty frame_id in odom message used by hover to set  hover position");
+        {
+          ROS_WARN_STREAM_THROTTLE(5.0,"Empty frame_id in odom message used by hover to set  hover position");
+          return;
+        }
         else
           map_frame_ = odom.header.frame_id;
       }
