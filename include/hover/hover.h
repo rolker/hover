@@ -19,7 +19,7 @@ protected:
   void setTarget(const geometry_msgs::Point& target);
   bool generateCommands(geometry_msgs::TwistStamped &cmd_vel, const std::string& map_frame);
 
-  void initialize(ros::NodeHandle& nh, ros::NodeHandle& nh_private, const tf2_ros::Buffer *tf);
+  void initialize(ros::NodeHandle& nh, ros::NodeHandle& nh_private, std::shared_ptr<tf2_ros::Buffer> tf);
 
   void clearDisplay();
   void updateDisplay(project11::LatLongDegrees target);
@@ -37,7 +37,7 @@ protected:
 
 private:
 
-  const tf2_ros::Buffer *tf_buffer_ = nullptr;
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
 
   // display
   geographic_visualization_msgs::GeoVizItem vis_display_;

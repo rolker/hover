@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="HoverTask">
+    <ReactiveSequence name="HoverReactiveSequence">
+      <RunOnce then_skip="true">
+        <HoverSettingsLoader minimum_distance="{hover_minimum_distance}"
+                             maximum_distance="{hover_maximum_distance}"
+                             maximum_speed="{hover_maximum_speed}"
+                             transit_distance="{hover_transit_distance}"/>
+      </RunOnce>
+      <HoverUpdate current_task="{current_task}"
+                   goal_pose="{goal_pose}"
+                   current_pose="{current_pose}"
+                   marker_array="{marker_array}"
+                   maximum_distance="{hover_maximum_distance}"/>
+      <Sequence>
+        <SubTree ID="TransitTo"
+                 name="TransitToHover"
+                 waypoint_reached_distance="{hover_transit_distance}"
+                 _autoremap="true"/>
+        <HoverCommand command_velocity="{command_velocity}"
+                      minimum_distance="{hover_minimum_distance}"
+                      maximum_distance="{hover_maximum_distance}"
+                      maximum_speed="{hover_maximum_speed}"
+                      tf_buffer="{tf_buffer}"
+                      goal_pose="{goal_pose}"/>
+      </Sequence>
+    </ReactiveSequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="HoverCommand"
+            editable="true">
+      <inout_port name="command_velocity"
+                  default="{command_velocity}"/>
+      <input_port name="minimum_distance"
+                  default="{hover_minimum_distance}">Distance from target where command speed drops to zero</input_port>
+      <input_port name="maximum_distance"
+                  default="{hover_maximum_distance}">Distance from target where command speed reaches max hover speed</input_port>
+      <input_port name="maximum_speed"
+                  default="{hover_maximum_speed}">Maximum speed used to move towards target position</input_port>
+      <input_port name="tf_buffer"
+                  default="{tf_buffer}"/>
+      <input_port name="goal_pose"
+                  default="{goal_pose}"/>
+    </Action>
+    <Action ID="HoverSettingsLoader"
+            editable="true">
+      <output_port name="minimum_distance"
+                   default="{hover_minimum_distance}">Distance from target where command speed drops to zero</output_port>
+      <output_port name="maximum_distance"
+                   default="{hover_maximum_distance}">Distance from target where command speed reaches max hover speed</output_port>
+      <output_port name="maximum_speed"
+                   default="{hover_maximum_speed}">Maximum speed used to move towards target position</output_port>
+      <output_port name="transit_distance"
+                   default="{hover_transit_distance}">Distance from goal at which a transit is needed to return to hover area</output_port>
+    </Action>
+    <Action ID="HoverUpdate"
+            editable="true">
+      <input_port name="current_task"
+                  default="{current_task}"/>
+      <output_port name="goal_pose"
+                   default="{goal_pose}"/>
+      <input_port name="current_pose"
+                  default="{current_pose}"/>
+      <input_port name="marker_array"
+                  default="{marker_array}"/>
+      <input_port name="maximum_distance"
+                  default="{hover_maximum_distance}"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

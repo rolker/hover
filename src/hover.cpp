@@ -13,7 +13,7 @@ Hover::~Hover()
 
 }
 
-void Hover::initialize(ros::NodeHandle& nh, ros::NodeHandle& nh_private, const tf2_ros::Buffer *tf)
+void Hover::initialize(ros::NodeHandle& nh, ros::NodeHandle& nh_private, std::shared_ptr<tf2_ros::Buffer> tf)
 {
   tf_buffer_ = tf;
   display_pub_ = nh.advertise<geographic_visualization_msgs::GeoVizItem>

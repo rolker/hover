@@ -9,7 +9,7 @@ HoverAction::HoverAction(std::string name):
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
 
-  initialize(nh, nh_private, &transforms_());
+  initialize(nh, nh_private, transforms_());
 
   nh_private.param<std::string>("map_frame", map_frame_, "map");
   nh_private.param<std::string>("base_frame", base_frame_, "base_link");

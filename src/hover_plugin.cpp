@@ -11,7 +11,7 @@ void HoverPlugin::configure(std::string name, project11_navigation::Context::Ptr
   context_ = context;
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~/" + name);
-  Hover::initialize(nh, private_nh, &context_->tfBuffer());
+  Hover::initialize(nh, private_nh, context_->tfBuffer());
   private_nh.param("minimum_distance", minimum_distance_, minimum_distance_);
   private_nh.param("maximum_distance", maximum_distance_, maximum_distance_);
   private_nh.param("maximum_speed", maximum_speed_, maximum_speed_);
@@ -19,7 +19,7 @@ void HoverPlugin::configure(std::string name, project11_navigation::Context::Ptr
   sendDisplay();
 }
 
-void HoverPlugin::setGoal(const project11_navigation::Task::Ptr& input)
+void HoverPlugin::setGoal(const project11_navigation::TaskPtr& input)
 {
   if(current_task_ != input)
     task_update_time_ = ros::Time();
@@ -36,7 +36,7 @@ void HoverPlugin::updateTask()
       geometry_msgs::Point target;
       if(current_task_->message().poses.empty())
       {
-        auto odom = context_->getOdometry();
+        auto odom = context_->robot().odometry();
         target = odom.pose.pose.position;
         if(odom.header.frame_id.empty())
         {
@@ -85,7 +85,7 @@ void HoverPlugin::updateDisplayMarkers()
 {
   if(current_task_)
   {
-    current_task_->markerArray().markers.clear();
+    //current_task_->markerArray().markers.clear();
     visualization_msgs::Marker marker;
     marker.header.frame_id = map_frame_;
     marker.header.stamp = ros::Time::now();
@@ -103,8 +103,8 @@ void HoverPlugin::updateDisplayMarkers()
     marker.scale.x = maximum_distance_;
     marker.scale.y = maximum_distance_;
     marker.lifetime = ros::Duration(2.0);
-    if(!marker.header.frame_id.empty())
-      current_task_->markerArray().markers.push_back(marker);
+    // if(!marker.header.frame_id.empty())
+    //   current_task_->markerArray().markers.push_back(marker);
   }
 }
 

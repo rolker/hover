@@ -10,6 +10,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>behaviortree_cpp</depend>
   <depend>geometry_msgs</depend>
   <depend>geographic_msgs</depend>
   <depend>roscpp</depend>
@@ -24,6 +25,7 @@
   
   <export>
     <project11_navigation plugin="${prefix}/hover_plugin.xml"/>
+    <behaviortree_cpp bt_lib_plugin="libhover_bt_plugin"/>
   </export>
 
 </package>
