@@ -53,6 +53,7 @@ target_link_libraries(${PROJECT_NAME}_node
 add_library(hover_bt_plugin SHARED src/hover_bt.cpp )
 target_link_libraries(hover_bt_plugin PRIVATE ${BTCPP_LIBRARY})
 target_compile_definitions(hover_bt_plugin PRIVATE  BT_PLUGIN_EXPORT )
+add_dependencies(hover_bt_plugin ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #set_target_properties(hover_bt_plugin PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${BTCPP_BIN_DESTINATION} )
 
 
